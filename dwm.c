@@ -1006,10 +1006,18 @@ keypress(XEvent *e)
 		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
 		&& keys[i].func)
 			keys[i].func(&(keys[i].arg));
+	if(((*(char *)keysDown)>>(int)(KeyCode)ev->keycode)&1)
+		for (i = 0; i < LENGTH(keys_pre); i++)
+			if (keysym == keys_pre[i].keysym
+			&& CLEANMASK(keys_pre[i].mod) == CLEANMASK(ev->state)
+			&& keys_pre[i].func)
+				keys_pre[i].func(&(keys_pre[i].arg));
+	(*(char *)keysDown) |= 1<<(int)(KeyCode)ev->keycode;
 }
 void
 keyrelease(XEvent *e)
 {
+	unsigned int i;
 	KeySym keysym;
 	XKeyEvent *ev;
 
