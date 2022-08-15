@@ -23,7 +23,7 @@ config.h:
 	cp config.def.h $@
 
 move:
-    mkdir ./bin/
+	mkdir -p ./bin/
 	mv ${OBJ} ./bin/
 	mv config.h ./bin/
 
