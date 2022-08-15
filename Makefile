@@ -15,7 +15,7 @@ options:
 	@echo "CC       = ${CC}"
 
 .c.o:
-	${CC} -c ${CFLAGS} $<
+	cd ./bin/;${CC} -c ${CFLAGS} ../$<
 
 ${OBJ}: config.h config.mk
 
@@ -23,11 +23,13 @@ config.h:
 	cp config.def.h $@
 
 move:
-	mkdir -p ./bin/
-	mv ${OBJ} ./bin/
-	mv config.h ./bin/
+	mv -f config.h ./bin/
 
-dwm: ${OBJ} move
+./bin:
+	mkdir -p ./bin/
+
+
+dwm: ./bin ${OBJ} move
 	cd ./bin/;${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
