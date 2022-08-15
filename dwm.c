@@ -140,7 +140,7 @@ typedef struct {
 	int isfloating;
 	int monitor;
 } Rule;
-typedef void* KeyHoldMask;
+typedef unsigned char KeyHoldMask[32];
 
 /* function declarations */
 static void applyrules(Client *c);
@@ -271,7 +271,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
-static KeyHoldMask keysDown;
+static KeyHoldMask *keysDown;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -970,6 +970,18 @@ grabkeys(void)
 				for (j = 0; j < LENGTH(modifiers); j++)
 					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
 						True, GrabModeAsync, GrabModeAsync);
+		/* keys_rel */
+		for (i = 0; i < LENGTH(keys_rel); i++)
+			if ((code = XKeysymToKeycode(dpy, keys_rel[i].keysym)))
+				for (j = 0; j < LENGTH(modifiers); j++)
+					XGrabKey(dpy, code, keys_rel[i].mod | modifiers[j], root,
+						True, GrabModeAsync, GrabModeAsync);
+		/* keys_pre */
+		for (i = 0; i < LENGTH(keys_pre); i++)
+			if ((code = XKeysymToKeycode(dpy, keys_pre[i].keysym)))
+				for (j = 0; j < LENGTH(modifiers); j++)
+					XGrabKey(dpy, code, keys_pre[i].mod | modifiers[j], root,
+						True, GrabModeAsync, GrabModeAsync);
 	}
 }
 
@@ -1000,19 +1012,25 @@ keypress(XEvent *e)
 	XKeyEvent *ev;
 
 	ev = &e->xkey;
+	// writeIntToFile((int)ev->keycode, "~/xlog.txt", 1);
 	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
+	unsigned int keycode = ev->keycode;
+
 	for (i = 0; i < LENGTH(keys); i++)
 		if (keysym == keys[i].keysym
 		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
 		&& keys[i].func)
 			keys[i].func(&(keys[i].arg));
-	if(((*(char *)keysDown)>>(int)(KeyCode)ev->keycode)&1)
+	if(!((*keysDown)[keycode/8] & 1<<keycode%8))
 		for (i = 0; i < LENGTH(keys_pre); i++)
 			if (keysym == keys_pre[i].keysym
 			&& CLEANMASK(keys_pre[i].mod) == CLEANMASK(ev->state)
 			&& keys_pre[i].func)
 				keys_pre[i].func(&(keys_pre[i].arg));
-	(*(char *)keysDown) |= 1<<(int)(KeyCode)ev->keycode;
+	
+	(*keysDown)[keycode/8] |= 1<<keycode%8;
+	// writeBitsToFile(32, keysDown, "~/xlog.txt");
+	
 }
 void
 keyrelease(XEvent *e)
@@ -1022,10 +1040,12 @@ keyrelease(XEvent *e)
 	XKeyEvent *ev;
 
 	ev = &e->xkey;
+	unsigned int keycode = ev->keycode;
 
-	if(((*(char *)keysDown)>>(int)(KeyCode)ev->keycode)&1)
-		(*(char *)keysDown) ^= 1<<(int)(KeyCode)ev->keycode;
-
+	if((*keysDown)[keycode/8] & 1<<keycode%8)
+		(*keysDown)[keycode/8] ^= 1<<keycode%8;
+	// writeBitsToFile(32, keysDown, "~/xlog.txt");
+	
 	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
 	for (i = 0; i < LENGTH(keys_rel); i++)
 		if (keysym == keys_rel[i].keysym
