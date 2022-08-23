@@ -67,7 +67,7 @@ static const Layout layouts[] = {
 /* commands */
 // static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 //static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *dmenucmd[] = { "rofi", "-show", "drun", NULL }; /* rofi */
+static const char *roficmd[] = { "rofi", "-show", "drun", NULL }; /* rofi */
 static const char *termcmd[]  = { "alacritty", NULL }; /* terminal */
 static const char *audioPlayPause[] = { "playerctl", "play-pause", NULL }; /* playPause */
 static const char *audioNext[] = { "playerctl", "next", NULL };
@@ -77,14 +77,13 @@ static const char *lowerVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK",
 static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "+5%", NULL};
 
 
-static Key keys[] = {
+static Key keys_auto[] = {
 	/* modifier                     key        function        argument */
 	{ 0,	          		        XF86_AudioNext, spawn,     {.v = audioNext }},
 	{ 0,	          		        XF86_AudioPrev, spawn,     {.v = audioPrev }},
 	{ 0,	          		        XF86_AudioLowerVolume, spawn, {.v = lowerVolume }},
-	{ 0,	          		        XF86_AudioRaiseVolume, spawn,     {.v = raiseVolume }},
+	{ 0,	          		        XF86_AudioRaiseVolume, spawn, {.v = raiseVolume }},
 	{ 0,	          		        XF86_AudioMute, spawn,     {.v = audioMuteToggle }},
-	{ SUPERKEY,                     XK_space,  spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -94,7 +93,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	//{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -126,6 +124,8 @@ static Key keys_rel[] = {
 static Key keys_pre[] = {
 	/* modifier                     key        function        argument */
 	{ 0,	          		        XF86_AudioPlay, spawn,     {.v = audioPlayPause }},
+	{ MODKEY|ShiftMask,             XK_q,      killclient,     {0} },
+	{ SUPERKEY,                     XK_space,  spawn,          {.v = roficmd } },
 	{ SUPERKEY,	                	XK_Return, spawn,          {.v = termcmd } }
 };
 /* button definitions */

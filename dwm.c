@@ -965,10 +965,10 @@ grabkeys(void)
 		KeyCode code;
 
 		XUngrabKey(dpy, AnyKey, AnyModifier, root);
-		for (i = 0; i < LENGTH(keys); i++)
-			if ((code = XKeysymToKeycode(dpy, keys[i].keysym)))
+		for (i = 0; i < LENGTH(keys_auto); i++)
+			if ((code = XKeysymToKeycode(dpy, keys_auto[i].keysym)))
 				for (j = 0; j < LENGTH(modifiers); j++)
-					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
+					XGrabKey(dpy, code, keys_auto[i].mod | modifiers[j], root,
 						True, GrabModeAsync, GrabModeAsync);
 		/* keys_rel */
 		for (i = 0; i < LENGTH(keys_rel); i++)
@@ -1016,11 +1016,11 @@ keypress(XEvent *e)
 	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
 	unsigned int keycode = ev->keycode;
 
-	for (i = 0; i < LENGTH(keys); i++)
-		if (keysym == keys[i].keysym
-		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
-		&& keys[i].func)
-			keys[i].func(&(keys[i].arg));
+	for (i = 0; i < LENGTH(keys_auto); i++)
+		if (keysym == keys_auto[i].keysym
+		&& CLEANMASK(keys_auto[i].mod) == CLEANMASK(ev->state)
+		&& keys_auto[i].func)
+			keys_auto[i].func(&(keys_auto[i].arg));
 	if(!((*keysDown)[keycode/8] & 1<<keycode%8))
 		for (i = 0; i < LENGTH(keys_pre); i++)
 			if (keysym == keys_pre[i].keysym
@@ -1035,23 +1035,35 @@ keypress(XEvent *e)
 void
 keyrelease(XEvent *e)
 {
-	unsigned int i;
-	KeySym keysym;
-	XKeyEvent *ev;
+	unsigned char autorepeat = 0;
+	if(XEventsQueued(dpy, QueuedAfterReading)){
+		XEvent nev;
+		XPeekEvent(dpy, &nev);
+		if (nev.type == KeyPress && nev.xkey.time == e->xkey.time &&
+		nev.xkey.keycode == e->xkey.keycode){
+			// Autorepeat --> not actually pressed
+			autorepeat = 1;
+		}
+	}
+	if(!autorepeat){
+		unsigned int i;
+		KeySym keysym;
+		XKeyEvent *ev;
 
-	ev = &e->xkey;
-	unsigned int keycode = ev->keycode;
+		ev = &e->xkey;
+		unsigned int keycode = ev->keycode;
 
-	if((*keysDown)[keycode/8] & 1<<keycode%8)
-		(*keysDown)[keycode/8] ^= 1<<keycode%8;
-	// writeBitsToFile(32, keysDown, "~/xlog.txt");
-	
-	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
-	for (i = 0; i < LENGTH(keys_rel); i++)
-		if (keysym == keys_rel[i].keysym
-		&& CLEANMASK(keys_rel[i].mod) == CLEANMASK(ev->state)
-		&& keys_rel[i].func)
-			keys_rel[i].func(&(keys_rel[i].arg));
+		if((*keysDown)[keycode/8] & 1<<keycode%8)
+			(*keysDown)[keycode/8] ^= 1<<keycode%8;
+		// writeBitsToFile(32, keysDown, "~/xlog.txt");
+		
+		keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
+		for (i = 0; i < LENGTH(keys_rel); i++)
+			if (keysym == keys_rel[i].keysym
+			&& CLEANMASK(keys_rel[i].mod) == CLEANMASK(ev->state)
+			&& keys_rel[i].func)
+				keys_rel[i].func(&(keys_rel[i].arg));
+	}
 }
 
 void
