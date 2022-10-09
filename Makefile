@@ -3,8 +3,8 @@
 
 include config.mk
 
-SRC = drw.c dwm.c util.c
-OBJ = ${SRC:.c=.o}
+SRC = drw.cpp util.cpp
+OBJ = ${SRC:.cpp=.o}
 
 all: options dwm
 
@@ -12,25 +12,22 @@ options:
 	@echo dwm build options:
 	@echo "CFLAGS   = ${CFLAGS}"
 	@echo "LDFLAGS  = ${LDFLAGS}"
-	@echo "CC       = ${CC}"
+	@echo "COMPILER = ${COMPILER}"
 
-.c.o:
-	cd ./bin/;${CC} -c ${CFLAGS} ../$<
+.cpp.o:
+	cd ./bin/;${COMPILER} -c ${CFLAGS} ../$<
 
-${OBJ}: config.h config.mk
+${OBJ}: config.mk
 
-config.h:
-	cp config.def.h $@
-
-move:
-	mv -f config.h ./bin/
+configFile:
+	cp -f config.def.h ./bin/config.h
 
 ./bin:
 	mkdir -p ./bin/
 
 
-dwm: ./bin ${OBJ} move
-	cd ./bin/;${CC} -o $@ ${OBJ} ${LDFLAGS}
+dwm: configFile ./bin ${OBJ}
+	cd ./bin/;${COMPILER} -o $@ ../dwm.cpp ${OBJ} ${LDFLAGS}
 
 clean:
 	rm -f dwm ${OBJ} dwm-${VERSION}.tar.gz
