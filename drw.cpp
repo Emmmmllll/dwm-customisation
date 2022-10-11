@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+namespace Xlib {
 #include <X11/Xlib.h>
-#include <ft2build.h>
 #include <X11/Xft/Xft.h>
+} // namespace Xlib
 // #include <opencv2/opencv.h>
-
 #include "drw.h"
 #include "util.h"
-
+namespace Xlib {
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ     4
 
@@ -65,7 +65,7 @@ utf8decode(const char *c, long *u, size_t clen)
 Drw *
 drw_create(Display *dpy, int screen, Window root, unsigned int w, unsigned int h)
 {
-	Drw *drw = (Drw *)ecalloc(1, sizeof(Drw));
+	Drw *drw = new Drw;
 
 	drw->dpy = dpy;
 	drw->screen = screen;
@@ -98,7 +98,7 @@ drw_free(Drw *drw)
 	XFreePixmap(drw->dpy, drw->drawable);
 	XFreeGC(drw->dpy, drw->gc);
 	drw_fontset_free(drw->fonts);
-	free(drw);
+	delete drw;
 }
 
 /* This function is an implementation detail. Library users should use
@@ -148,7 +148,7 @@ xfont_create(Drw *drw, const char *fontname, FcPattern *fontpattern)
 		return NULL;
 	}
 
-	font = (Fnt *)ecalloc(1, sizeof(Fnt));
+	font = new Fnt;
 	font->xfont = xfont;
 	font->pattern = pattern;
 	font->h = xfont->ascent + xfont->descent;
@@ -165,7 +165,7 @@ xfont_free(Fnt *font)
 	if (font->pattern)
 		FcPatternDestroy(font->pattern);
 	XftFontClose(font->dpy, font->xfont);
-	free(font);
+	delete font;
 }
 
 Fnt*
@@ -216,7 +216,7 @@ drw_scm_create(Drw *drw, const char *clrnames[], size_t clrcount)
 	Clr *ret;
 
 	/* need at least two colors for a scheme */
-	if (!drw || !clrnames || clrcount < 2 || !(ret = (Clr *)ecalloc(clrcount, sizeof(XftColor))))
+	if (!drw || !clrnames || clrcount < 2 || !(ret = new XftColor[clrcount]))
 		return NULL;
 
 	for (i = 0; i < clrcount; i++)
@@ -447,7 +447,7 @@ drw_cur_create(Drw *drw, int shape)
 {
 	Cur *cur;
 
-	if (!drw || !(cur = (Cur*)ecalloc(1, sizeof(Cur))))
+	if (!drw || !(cur = new Cur))
 		return NULL;
 
 	cur->cursor = XCreateFontCursor(drw->dpy, shape);
@@ -462,9 +462,10 @@ drw_cur_free(Drw *drw, Cur *cursor)
 		return;
 
 	XFreeCursor(drw->dpy, cursor->cursor);
-	free(cursor);
+	delete cursor;
 }
 XImage *
 loadImage(const char *filename){
 	return nullptr;
 }
+} // end of namespace Xlib

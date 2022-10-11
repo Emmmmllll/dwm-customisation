@@ -3,7 +3,7 @@
 
 include config.mk
 
-SRC = drw.cpp util.cpp
+SRC = drw.cpp util.cpp dwm.cpp
 OBJ = ${SRC:.cpp=.o}
 
 all: options dwm
@@ -27,7 +27,7 @@ configFile:
 
 
 dwm: configFile ./bin ${OBJ}
-	cd ./bin/;${COMPILER} -o $@ ../dwm.cpp ${OBJ} ${LDFLAGS}
+	cd ./bin/;${COMPILER} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	rm -f dwm ${OBJ} dwm-${VERSION}.tar.gz
@@ -51,5 +51,8 @@ install: all
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/dwm\
 		${DESTDIR}${MANPREFIX}/man1/dwm.1
+
+dinst: all
+	chmod 755 ./bin/dwm
 
 .PHONY: all options clean dist install uninstall

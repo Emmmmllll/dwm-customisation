@@ -1,6 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include <stdarg.h>
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,29 +10,24 @@ void
 die(const char *fmt, ...)
 {
 	va_list ap;
+	FILE *f = fopen("/home/emil/dwm-customisation/bin/log.txt", "a");
 
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
+	fprintf(f, fmt, ap);
 	va_end(ap);
 
 	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {
 		fputc(' ', stderr);
+		fputs(" ", f);
 		perror(NULL);
 	} else {
 		fputc('\n', stderr);
+		fputs("\n", f);
 	}
+	fclose(f);
 
 	exit(1);
-}
-
-void *
-ecalloc(size_t nmemb, size_t size)
-{
-	void *p;
-
-	if (!(p = calloc(nmemb, size)))
-		die("calloc:");
-	return p;
 }
 
 void
