@@ -2,14 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-namespace Xlib {
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
-} // namespace Xlib
+
 // #include <opencv2/opencv.h>
 #include "drw.h"
 #include "util.h"
-namespace Xlib {
+
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ     4
 
@@ -468,4 +467,3 @@ XImage *
 loadImage(const char *filename){
 	return nullptr;
 }
-} // end of namespace Xlib

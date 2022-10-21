@@ -9,3 +9,4 @@ void printBits(size_t const size, void const * const ptr);
 void writeBitsToFile(size_t const size, void const * const ptr, const char *path);
 void writeIntToFile(const int number, const char *path, int append);
 void writeToFile(const char *text, const char *path, int append);
+void echo(const char *format, ...);

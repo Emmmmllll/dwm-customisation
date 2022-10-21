@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdarg.h>
 #include "util.h"
 
 void
@@ -84,5 +84,14 @@ writeIntToFile(const int number, const char *path, int append){
 	else
 		f= fopen(path, "w");
 	fprintf(f, "%d", number);
+	fclose(f);
+}
+void echo(const char *format, ...){
+	FILE *f ;
+	f = fopen("/home/emil/dwm-customisation/bin/log.txt", "a");
+	va_list args;
+	va_start(args, format);
+	fprintf(f, format, args);
+	va_end(args);
 	fclose(f);
 }
