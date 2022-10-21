@@ -53,6 +53,7 @@ uninstall:
 		${DESTDIR}${MANPREFIX}/man1/dwm.1
 
 dinst: all
-	chmod 755 ./bin/dwm
+	mv ./bin/dwm .
+	chmod 755 ./dwm
 
 .PHONY: all options clean dist install uninstall
