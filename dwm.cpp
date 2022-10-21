@@ -519,7 +519,7 @@ cleanup(void)
 	Layout foo = { "", NULL };
 	Monitor *m;
 	size_t i;
-	delete [] keysDown;
+	delete keysDown;
 
 	view(&a);
 	selmon->lt[selmon->sellt] = &foo;
@@ -675,12 +675,12 @@ configurerequest(Xlib::XEvent *e)
 	Xlib::XSync(dpy, False);
 }
 
-WM::Monitor *
+Monitor *
 createmon(void)
 {
 	Monitor *m;
 
-	m = new Monitor;
+	m = (Monitor*)calloc(1, sizeof(Monitor));
 	m->tagset[0] = m->tagset[1] = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
@@ -725,7 +725,7 @@ detachstack(Client *c)
 	}
 }
 
-WM::Monitor *
+Monitor *
 dirtomon(int dir)
 {
 	Monitor *m = NULL;
@@ -915,7 +915,6 @@ getatomprop(Client *c, Xlib::Atom prop)
 	unsigned long dl;
 	unsigned char *p = NULL;
 	Xlib::Atom da, atom = None;
-	
 
 	if (Xlib::XGetWindowProperty(dpy, c->win, prop, 0L, sizeof atom, False, XA_ATOM,
 		&da, &di, &dl, &dl, &p) == Success && p) {
@@ -1343,7 +1342,7 @@ quit(const Arg *arg)
 	running = 0;
 }
 
-WM::Monitor *
+Monitor *
 recttomon(int x, int y, int w, int h)
 {
 	Monitor *m, *r = selmon;
