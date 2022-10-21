@@ -301,7 +301,8 @@ static Clr **scheme;
 static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
-static Window root, wmcheckwin, winbarwin;
+static Window root, wmcheckwin;
+static Window winbarwin;
 static KeyHoldMask *keysDown;
 
 /* configuration, allows nested code to access above variables */
@@ -780,7 +781,7 @@ drawbar(Monitor *m)
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, m->ww, bh, lrpad / 2, m->sel->name, 0);
-			drw_map(drw, winbarwin, 0, 0, m->ww/3, bh);
+			drw_map(drw, m->barwin, 0, 0, m->ww/3, bh);
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
