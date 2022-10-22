@@ -408,6 +408,15 @@ drw_map(Drw *drw, Window win, int x, int y, unsigned int w, unsigned int h)
 	XCopyArea(drw->dpy, drw->drawable, win, drw->gc, x, y, w, h, x, y);
 	XSync(drw->dpy, False);
 }
+void
+drw_maptoorigin(Drw *drw, Window win, int x, int y, unsigned int w, unsigned int h)
+{
+	if (!drw)
+		return;
+
+	XCopyArea(drw->dpy, drw->drawable, win, drw->gc, x, y, w, h, 0, 0);
+	XSync(drw->dpy, False);
+}
 
 unsigned int
 drw_fontset_getwidth(Drw *drw, const char *text)
