@@ -3,7 +3,7 @@
 
 include config.mk
 
-SRC = drw.cpp util.cpp dwm.cpp
+SRC = drw.cpp util.cpp dwm.cpp config.cpp
 OBJ = ${SRC:.cpp=.o}
 
 all: options dwm
@@ -21,6 +21,7 @@ ${OBJ}: config.mk
 
 configFile:
 	cp -f config.def.h ./bin/config.h
+	cp -f defkeybinds.conf ~/.config/dwm/keybinds.conf
 
 ./bin:
 	mkdir -p ./bin/

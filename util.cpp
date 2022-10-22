@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <sys/stat.h>
 #include <stdarg.h>
 #include <iostream>
 #include <stdlib.h>
@@ -29,24 +30,9 @@ die(const char *fmt, ...)
 
 	exit(1);
 }
-
-void
-printBits(size_t const size, void const * const ptr)
-{
-    unsigned char *b = (unsigned char*) ptr;
-    unsigned char byte;
-    int i, j;
-    
-    for (i = size-1; i >= 0; i--) {
-        for (j = 7; j >= 0; j--) {
-            byte = (b[i] >> j) & 1;
-			if (byte) 
-				system("/home/emil/xlog 1");
-			else
-				system("/home/emil/xlog 0");
-        }
-		system("/home/emil/xlog \\\\n");
-    }
+bool checkFile(const char * path){
+    struct stat buffer;
+    return (stat(path, &buffer) == 0);
 }
 void
 writeBitsToFile(size_t const size, void const * const ptr, const char *path)

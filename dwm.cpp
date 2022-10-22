@@ -47,6 +47,9 @@
 #include "drw.h"
 #include "util.h"
 
+#include "dwmtypes.h"
+#include "dwmaction.h"
+#include "config.h"
 #include "dwm.h"
 /* configuration, allows nested code to access above variables */
 #include "bin/config.h"
@@ -601,7 +604,26 @@ focus(Client *c)
 		grabbuttons(c, 1);
 		XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
 		setfocus(c);
+		if(!winbarwin){
+			XSetWindowAttributes wa = {
+				.background_pixmap = ParentRelative,
+				.event_mask = ButtonPressMask|ExposureMask,
+				.override_redirect = True
+			};
+			XClassHint ch = {(char *) "dwm", (char *)"dwm"};
+			Monitor *m = c->mon;
+			winbarwin = XCreateWindow(dpy, root, m->wx + (m->ww/3), m->by, m->ww/3, bh, 0,
+							DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+							CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+			XDefineCursor(dpy, winbarwin, cursor[CurNormal]->cursor);
+			XMapRaised(dpy, winbarwin);
+			XSetClassHint(dpy, winbarwin, &ch);
+		}
 	} else {
+		if(winbarwin){
+			XDestroyWindow(dpy, winbarwin);
+			winbarwin = NULL;
+		}
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 	}
@@ -1106,7 +1128,9 @@ recttomon(int x, int y, int w, int h)
 		}
 	return r;
 }
-
+void refreshconfig(const Arg *arg){
+	// parse_keyBinds(keys, buttons);
+}
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
@@ -1442,6 +1466,7 @@ setup(void)
 		|LeaveWindowMask|StructureNotifyMask|PropertyChangeMask;
 	XChangeWindowAttributes(dpy, root, CWEventMask|CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
+	// parse_keyBinds(keys, buttons);
 	grabkeys();
 	focus(NULL);
 }
@@ -1667,14 +1692,6 @@ updatebars(void)
 		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
 		XMapRaised(dpy, m->barwin);
 		XSetClassHint(dpy, m->barwin, &ch);
-	}
-	if(!winbarwin){
-		m = mons;
-		winbarwin = XCreateWindow(dpy, root, m->wx + (m->ww/3), m->by, m->ww/3, bh, 0, DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
-						CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
-		XDefineCursor(dpy, winbarwin, cursor[CurNormal]->cursor);
-		XMapRaised(dpy, winbarwin);
-		XSetClassHint(dpy, winbarwin, &ch);
 	}
 }
 
@@ -1983,8 +2000,8 @@ zoom(const Arg *arg)
 
 void
 runAutostart(void){
-	system(". ~/.config/dwm/autostart_blocking");
-	system(". ~/.config/dwm/autostart &");
+	system(". ~/.config/dwm/autostart_blocking.sh");
+	system(". ~/.config/dwm/autostart.sh &");
 }
 int
 main(int argc, char *argv[])
