@@ -18,4 +18,4 @@ typedef struct {
 	const Arg arg;
 } Key;
 
-void parse_keyBinds(Key * &keys, Button * &buttons);
+void parse_keyBinds(Key * keys, Button * buttons);

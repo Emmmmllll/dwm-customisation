@@ -223,12 +223,12 @@ buttonpress(XEvent *e)
 		// 	click = ClkTagBar;
 		// 	arg.ui = 1 << i;
 		// } else
-		if (ev->x < x + blw)
-			click = ClkLtSymbol;
+		// if (ev->x < x + blw)
+		// 	click = ClkLtSymbol;
 		// else if (ev->x > selmon->ww - (int)TEXTW(stext))
 		// 	click = ClkStatusText;
-		else
-			click = ClkWinTitle;
+		// else
+		click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
@@ -430,7 +430,8 @@ createmon(void)
 	m->topbar = topbar;
 	m->lt[0] = &layouts[0];
 	m->lt[1] = &layouts[1 % LENGTH(layouts)];
-	strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
+	m->sellt = 1 % LENGTH(layouts);
+	strncpy(m->ltsymbol, layouts[m->sellt].symbol, sizeof m->ltsymbol);
 	return m;
 }
 
@@ -618,6 +619,10 @@ focus(Client *c)
 			XDefineCursor(dpy, winbarwin, cursor[CurNormal]->cursor);
 			XMapRaised(dpy, winbarwin);
 			XSetClassHint(dpy, winbarwin, &ch);
+		}
+		else{
+			XMoveWindow(dpy, winbarwin, selmon->wx + (selmon->ww/3), selmon->by);
+			XResizeWindow(dpy, winbarwin, selmon->ww/3, bh);
 		}
 	} else {
 		if(winbarwin){
@@ -1128,8 +1133,9 @@ recttomon(int x, int y, int w, int h)
 		}
 	return r;
 }
-void refreshconfig(const Arg *arg){
-	// parse_keyBinds(keys, buttons);
+void
+refreshconfig(const Arg *arg){
+	parse_keyBinds(keys, buttons);
 }
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
@@ -1466,7 +1472,7 @@ setup(void)
 		|LeaveWindowMask|StructureNotifyMask|PropertyChangeMask;
 	XChangeWindowAttributes(dpy, root, CWEventMask|CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
-	// parse_keyBinds(keys, buttons);
+	parse_keyBinds(keys, buttons);
 	grabkeys();
 	focus(NULL);
 }

@@ -30,7 +30,8 @@ die(const char *fmt, ...)
 
 	exit(1);
 }
-bool checkFile(const char * path){
+bool
+checkFile(const char * path){
     struct stat buffer;
     return (stat(path, &buffer) == 0);
 }
