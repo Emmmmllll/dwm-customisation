@@ -61,6 +61,7 @@ static void keyrelease(XEvent *e);
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
+static void maximizeclient(Client *c);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static Client *nexttiled(Client *c);
@@ -97,6 +98,7 @@ static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
+static int xerrormsg(Display *dpy, XErrorEvent *ee);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -107,6 +109,7 @@ static char stext[256];
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
+static int bthw = 8;		 /* bar button width and height */
 static int lrpad;            /* sum of left and right padding for text */
 static int (*xerrorxlib)(Display *, XErrorEvent *);
 static unsigned int numlockmask = 0;

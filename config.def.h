@@ -81,7 +81,7 @@ static const char *lowerVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK",
 static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "+5%", NULL};
 
 
-
+using config::Key;
 static Key keys[] = {
 	/* modifier     	   			grabRepRel_Mask				key        function        argument */
 	{ 0,	          				Grabbed|Repeat,				XF86_AudioNext, spawn,     { .v = audioNext }},
@@ -124,10 +124,17 @@ static Key keys[] = {
 	{ 0,	          		        Grabbed,					XF86_AudioPlay, spawn,     {.v = audioPlayPause }},
 	{ MODKEY|ShiftMask,             Grabbed,					XK_q,      killclient,     {0} },
 	{ SUPERKEY,                     Grabbed,					XK_space,  spawn,          {.v = roficmd } },
-	{ SUPERKEY,	                	Grabbed,					XK_Return, spawn,          {.v = termcmd } }
+	{ SUPERKEY,	                	Grabbed,					XK_Return, spawn,          {.v = termcmd } },
+	{ ControlMask|MODKEY,			Grabbed,					XK_r, refreshconfig,       {0} }
 };
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
+using config::Button;
+using config::ClkLtSymbol;
+using config::ClkWinTitle;
+using config::ClkStatusText;
+using config::ClkTagBar;
+using config::ClkClientWin;
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },

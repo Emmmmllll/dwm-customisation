@@ -56,6 +56,17 @@
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+char xerrormessage[24];
+
+void
+setxerrormessage(char * msg){
+	XSetErrorHandler(xerrormsg);
+	if(sizeof(msg)<24*sizeof(char))
+		memccpy(xerrormessage, msg, 1, sizeof(msg));
+	else
+		memccpy(xerrormessage, msg, 1, sizeof(char) * 23);
+	xerrormessage[23] = '\0';
+}
 
 /* function implementations */
 void
@@ -207,39 +218,64 @@ buttonpress(XEvent *e)
 	Monitor *m;
 	XButtonPressedEvent *ev = &e->xbutton;
 
-	click = ClkRootWin;
+	click = config::ClkRootWin;
 	/* focus monitor if necessary */
 	if ((m = wintomon(ev->window)) && m != selmon) {
 		unfocus(selmon->sel, 1);
 		selmon = m;
 		focus(NULL);
 	}
-	if (ev->window == selmon->barwin) {
+	if (ev->window == winbarwin && winbarwin) {
 		i = x = 0;
 		// do
 		// 	x += TEXTW(tags[i]);
 		// while (ev->x >= x && ++i < LENGTH(tags));
 		// if (i < LENGTH(tags)) {
-		// 	click = ClkTagBar;
+		// 	click = config::ClkTagBar;
 		// 	arg.ui = 1 << i;
 		// } else
 		// if (ev->x < x + blw)
-		// 	click = ClkLtSymbol;
+		// 	click = config::ClkLtSymbol;
 		// else if (ev->x > selmon->ww - (int)TEXTW(stext))
-		// 	click = ClkStatusText;
+		// 	click = config::ClkStatusText;
 		// else
-		click = ClkWinTitle;
+		int w = m->ww/3;
+		if(ev->y > bh/2 - bthw/2 && ev->y < bh/2 + bthw/2){
+			x = w*2 - bthw *8 - ev->x;
+			for(i = 0; i<3; i++){
+				if(x >= 0){
+					if(bthw < x){
+						continue;
+					}
+					if(i == 0){
+						// first button click
+					}
+					if(i == 1){
+						//second button click
+						maximizeclient(selmon->sel);
+					}
+					if(i == 2){
+						//third button click
+					}
+				}
+				else
+					break;
+				x += bthw * 2;
+			}
+		}
+		else
+			click = config::ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
 		XAllowEvents(dpy, ReplayPointer, CurrentTime);
-		click = ClkClientWin;
+		click = config::ClkClientWin;
 		
 	}
 	for (i = 0; i < LENGTH(buttons); i++)
 		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
 		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+			buttons[i].func(click == config::ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
 }
 
 void
@@ -269,6 +305,7 @@ cleanup(void)
 		while (m->stack)
 			unmanage(m->stack, 0);
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
+	config::cleanup();
 	while (mons)
 		cleanupmon(mons);
 	for (i = 0; i < CurLast; i++)
@@ -412,7 +449,9 @@ configurerequest(XEvent *e)
 		wc.border_width = ev->border_width;
 		wc.sibling = ev->above;
 		wc.stack_mode = ev->detail;
+		setxerrormessage("configureReqset");
 		XConfigureWindow(dpy, ev->window, ev->value_mask, &wc);
+		XSetErrorHandler(xerror);
 	}
 	XSync(dpy, False);
 }
@@ -546,6 +585,10 @@ drawbar(Monitor *m)
 		w = m->ww/3;
 		drw_setscheme(drw, scheme[SchemeSel]);
 		drw_text(drw, 0, bh, w, bh, (w - tw)/2 , m->sel->name, 0);
+		// drw_setscheme(drw, scheme[SchemeSel]);
+		drw_rect(drw, w - bthw *8, bh + bh/2 - bthw/2, bthw, bthw, 1, 0);
+		drw_rect(drw, w - bthw *6, bh + bh/2 - bthw/2, bthw, bthw, 1, 0);
+		drw_rect(drw, w - bthw *4, bh + bh/2 - bthw/2, bthw, bthw, 1, 0);
 		drw_maptoorigin(drw, winbarwin, 0, bh, w, bh);
 	}
 }
@@ -766,7 +809,7 @@ grabbuttons(Client *c, int focused)
 			XGrabButton(dpy, AnyButton, AnyModifier, c->win, False,
 				BUTTONMASK, GrabModeSync, GrabModeSync, None, None);
 		for (i = 0; i < LENGTH(buttons); i++)
-			if (buttons[i].click == ClkClientWin)
+			if (buttons[i].click == config::ClkClientWin)
 				for (j = 0; j < LENGTH(modifiers); j++)
 					XGrabButton(dpy, buttons[i].button,
 						buttons[i].mask | modifiers[j],
@@ -920,7 +963,9 @@ manage(Window w, XWindowAttributes *wa)
 	c->bw = borderpx;
 
 	wc.border_width = c->bw;
+	setxerrormessage("manage");
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
+	XSetErrorHandler(xerror);
 	XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
 	configure(c); /* propagates border_width, if size doesn't change */
 	updatewindowtype(c);
@@ -967,6 +1012,27 @@ maprequest(XEvent *e)
 		return;
 	if (!wintoclient(ev->window))
 		manage(ev->window, &wa);
+}
+
+void
+maximizeclient(Client *c){	
+	if(!c || !c->win)
+		return;
+	if(!c->mon)
+		return;
+	selmon = c->mon;
+	selmon->sel = c;
+	if(!c->isfloating){
+		if(selmon->clients != c)
+			selmon->sel->isfloating = 1;
+		for(c = c->next; c && !ISVISIBLE(c); c = c->next)
+			continue;
+		if(c)
+			selmon->sel->isfloating = 1;
+		c = selmon->sel;
+	}
+	restack(selmon);
+	resizeclient(c, selmon->wx, selmon->wy, selmon->ww, selmon->wh);
 }
 
 void
@@ -1135,7 +1201,7 @@ recttomon(int x, int y, int w, int h)
 }
 void
 refreshconfig(const Arg *arg){
-	parse_keyBinds(keys, buttons);
+	config::parse_keybinds();
 }
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
@@ -1154,7 +1220,9 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldw = c->w; c->w = wc.width = w;
 	c->oldh = c->h; c->h = wc.height = h;
 	wc.border_width = c->bw;
+	setxerrormessage("resizeClient");
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
+	XSetErrorHandler(xerror);
 	configure(c);
 	XSync(dpy, False);
 }
@@ -1233,7 +1301,9 @@ restack(Monitor *m)
 		wc.sibling = m->barwin;
 		for (c = m->stack; c; c = c->snext)
 			if (!c->isfloating && ISVISIBLE(c)) {
+				setxerrormessage("restack");
 				XConfigureWindow(dpy, c->win, CWSibling|CWStackMode, &wc);
+				XSetErrorHandler(xerror);
 				wc.sibling = c->win;
 			}
 	}
@@ -1472,7 +1542,7 @@ setup(void)
 		|LeaveWindowMask|StructureNotifyMask|PropertyChangeMask;
 	XChangeWindowAttributes(dpy, root, CWEventMask|CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
-	parse_keyBinds(keys, buttons);
+	config::parse_keybinds();
 	grabkeys();
 	focus(NULL);
 }
@@ -1652,7 +1722,9 @@ unmanage(Client *c, int destroyed)
 		XGrabServer(dpy); /* avoid race conditions */
 		XSetErrorHandler(xerrordummy);
 		XSelectInput(dpy, c->win, NoEventMask);
+		setxerrormessage("unmanage");
 		XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* restore border */
+		XSetErrorHandler(xerror);
 		XUngrabButton(dpy, AnyButton, AnyModifier, c->win);
 		setclientstate(c, WithdrawnState);
 		XSync(dpy, False);
@@ -1712,6 +1784,12 @@ updatebarpos(Monitor *m)
 		m->wy = m->topbar ? m->wy + bh : m->wy;
 	} else
 		m->by = -bh;
+	if(winbarwin && m == selmon){
+			XWindowChanges wc = {.y = m->by};
+			setxerrormessage("updatebarpos");
+			XConfigureWindow(dpy, winbarwin, CWY, &wc);
+			XSetErrorHandler(xerror);
+	}
 }
 
 void
@@ -1960,6 +2038,11 @@ wintomon(Window w)
  * ignored (especially on UnmapNotify's). Other types of errors call Xlibs
  * default error handler, which may call exit. */
 int
+xerrormsg(Display * dpy, XErrorEvent *ee){
+	echo("Error Caught!!!: %s\n", xerrormessage);
+	return -1;
+}
+int
 xerror(Display *dpy, XErrorEvent *ee)
 {
 	if (ee->error_code == BadWindow
@@ -2014,6 +2097,9 @@ main(int argc, char *argv[])
 {
 	if (argc == 2 && !strcmp("-v", argv[1]))
 		die("dwm-" VERSION);
+	else if(argc == 2 && !strcmp("-dbg", argv[1])){
+		isDebug = true;
+	}
 	else if (argc != 1)
 		die("usage: dwm [-v]");
 	if (!setlocale(LC_CTYPE, "") || !XSupportsLocale())
