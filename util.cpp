@@ -78,7 +78,7 @@ void echo(const char *format, ...){
 	f = fopen("/home/emil/dwm-customisation/bin/log.txt", "a");
 	va_list args;
 	va_start(args, format);
-	fprintf(f, format, args);
+	vfprintf(f, format, args);
 	va_end(args);
 	fclose(f);
 }

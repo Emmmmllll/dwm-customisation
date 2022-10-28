@@ -1,12 +1,14 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <vector>
 
 #include <X11/X.h>
 #include <X11/keysym.h>
+#include <X11/Xlib.h>
 
 #include "util.h"
 #include "dwmtypes.h"
@@ -29,7 +31,62 @@ std::string trim(std::string str){
 
 namespace config{
 
+typedef struct ActionFunction{
+    void (*func)(Arg * );
+    const char * name;
+    const unsigned char argtype;
+};
 
+static std::vector<ActionFunction> actionFunctions;
+
+void dumpconfig();
+char **
+splitstring(std::string str){
+    std::size_t pos = 0;
+    std::vector<char *>carg;
+    bool isInString;
+    while(1){
+        pos = 0;
+        isInString = false;
+        while(1){
+            pos = str.find_first_of(" \t\"", pos);
+            if(pos == std::string::npos){
+                pos = str.size();
+                break;
+            }
+            if(str[pos] == '"'){
+                if(pos != 0 && str[pos-1] == '\\'){
+                    str = str.erase(pos-1, 1);
+                    if(isInString)
+                        pos = str.find('"', pos);
+                    continue;
+                }
+                str = str.erase(pos, 1);
+                if(!isInString){
+                    pos = str.find('"', pos);
+                    isInString = true;
+                }
+            }
+            else{
+                break;
+            }
+        }
+        char * part = new char[pos + 1]();
+        std::copy(str.begin(), str.begin()+pos, part);
+        carg.push_back(part);
+        if(pos == std::string::npos || pos +1 >= str.size())
+            break;
+        pos = str.find_first_not_of(" \t", pos);
+        str = str.erase(0, pos);
+    }
+    char ** cargarr = new  char*[carg.size()+1]();
+    std::copy(carg.begin(), carg.end(), cargarr);
+    return cargarr;
+}
+void
+register_actionfunc(void (*func)(Arg *), const char * name, const unsigned char argtype){
+    actionFunctions.push_back({func, name, argtype});
+}
 bool
 updateDefinitions(std::vector<std::string*> *defines, std::string line){
     if(line[0] == '#' && line[1] == '!'){
@@ -43,7 +100,9 @@ updateDefinitions(std::vector<std::string*> *defines, std::string line){
             alias = trim(line.substr(0, separator));
             value = trim(line.substr(separator+1));
         }
-        std::string def[2] = {alias, value};
+        std::string * def = new std::string[2];
+        def[0] = alias;
+        def[1] = value;
         defines->push_back(def);
     }
     else{
@@ -80,130 +139,147 @@ updateDefinitions(std::vector<std::string*> *defines, std::string line){
 std::string
 applyDefinitions(std::vector<std::string*> definitions, std::string str){
     std::size_t pos = 0;
+    char c;
     for(std::string * &def : definitions){
-        while((pos = str.find(def[0])) != std::string::npos){
+        while((pos = str.find(def[0])) != std::string::npos && 
+        (str.size() == pos + def[0].size() || (c = str[pos+def[0].size()]) == ' ' ||
+         c == '\t' || c == ',' )){
             str = str.substr(0,pos) + def[1] + str.substr(pos + def[0].length());
         }
     }
     return str;
 }
 void
-parse_key(std::string str, std::vector<Key> keys){
-    std::size_t pos = str.find(",");
+parse_key(std::string str, std::vector<Key> *keys){
+    Key *k = new Key();
+    std::size_t pos;
+    std::string section;
+    //get key section (Modifiers included)
+    pos = str.find(",");
     if(pos == std::string::npos || pos + 1 > str.size())
         return;
-    Key k{};
-    //get key section (Modifiers included)
-    std::string section = trim(str.substr(0, pos));
+    section = trim(str.substr(0, pos+1));
     str = str.substr(pos + 1);
 
-    while((pos = section.find_first_of(" \t")) != std::string::npos){
+    while((pos = section.find_first_of(" \t,")) != std::string::npos){
         std::string substr = section.substr(0, pos);
         if( substr ==  "Mod4Mask")
-            k.mod |= Mod4Mask;
+            k->mod |= Mod4Mask;
         else if( substr == "Mod1Mask")
-            k.mod |= Mod1Mask;
+            k->mod |= Mod1Mask;
         else if( substr == "ControlMask")
-            k.mod |= ControlMask;
+            k->mod |= ControlMask;
+        else if( substr == "ShiftMask")
+            k->mod |= ShiftMask;
         else{
-            if(k.keysym)
+            if(k->keysym)
                 return;
             if(substr.substr(0, 2) == "0x"){
-
+                k->keysym = std::stoul(substr, nullptr, 16);
+                if(!k->keysym)
+                    return;
             }
-            // numbers
-            else if( substr == "0")
-                k.keysym = XK_0;
-            else if( substr == "1")
-                k.keysym = XK_1;
-            else if( substr == "2")
-                k.keysym = XK_2;
-            else if( substr == "3")
-                k.keysym = XK_3;
-            else if( substr == "4")
-                k.keysym = XK_4;
-            else if( substr == "5")
-                k.keysym = XK_5;
-            else if( substr == "6")
-                k.keysym = XK_6;
-            else if( substr == "7")
-                k.keysym = XK_7;
-            else if( substr == "8")
-                k.keysym = XK_8;
-            else if( substr == "9")
-                k.keysym = XK_9;
-            // letters
-            else if( substr == "q")
-                k.keysym = XK_q;
-            else if( substr == "w")
-                k.keysym = XK_w;
-            else if( substr == "e")
-                k.keysym = XK_e;
-            else if( substr == "r")
-                k.keysym = XK_r;
-            else if( substr == "t")
-                k.keysym = XK_t;
-            else if( substr == "z")
-                k.keysym = XK_z;
-            else if( substr == "u")
-                k.keysym = XK_u;
-            else if( substr == "i")
-                k.keysym = XK_i;
-            else if( substr == "o")
-                k.keysym = XK_o;
-            else if( substr == "p")
-                k.keysym = XK_p;
-            else if( substr == "a")
-                k.keysym = XK_a;
-            else if( substr == "s")
-                k.keysym = XK_s;
-            else if( substr == "d")
-                k.keysym = XK_d;
-            else if( substr == "f")
-                k.keysym = XK_f;
-            else if( substr == "g")
-                k.keysym = XK_g;
-            else if( substr == "h")
-                k.keysym = XK_h;
-            else if( substr == "j")
-                k.keysym = XK_j;
-            else if( substr == "k")
-                k.keysym = XK_k;
-            else if( substr == "l")
-                k.keysym = XK_l;
-            else if( substr == "y")
-                k.keysym = XK_y;
-            else if( substr == "x")
-                k.keysym = XK_x;
-            else if( substr == "c")
-                k.keysym = XK_c;
-            else if( substr == "v")
-                k.keysym = XK_v;
-            else if( substr == "b")
-                k.keysym = XK_b;
-            else if( substr == "n")
-                k.keysym = XK_n;
-            else if( substr == "m")
-                k.keysym = XK_m;
-            // punctuation
-            else if( substr == "space")
-                k.keysym = XK_space;
-            else if( substr == "comma")
-                k.keysym = XK_comma;
-            else if( substr == "period")
-                k.keysym = XK_period;
-            else if( substr == "enter")
-                k.keysym = XK_Return;
-            else if( substr == "backspace")
-                k.keysym = XK_BackSpace;
-            else if( substr == "tab")
-                k.keysym = XK_Tab;
+            else{
+                k->keysym = XStringToKeysym(substr.c_str());
+                if(!k->keysym)
+                    return;
+            }
         }
-
-        pos = section.find_first_not_of(" \t", pos);
+        pos = section.find_first_not_of(" \t,", pos);
         section.erase(0, pos);
     }
+    //get actionfunction section
+    unsigned char argtype = 0; // 0: no arg, 1: int, 2: uint, 3: float, 4: void
+    pos = str.find(",");
+    if(pos == std::string::npos || pos + 1 > str.size())
+        return;
+    section = trim(str.substr(0, pos));
+    str = str.substr(pos + 1);
 
+    for(ActionFunction &func : actionFunctions){
+        if(!strcmp(section.c_str(),func.name)){
+            k->func = func.func;
+            argtype = func.argtype;
+            break;
+        }
+    }
+    if(k->func == nullptr){
+        echo("No matching actionfunction found for: '%s'\n", section.c_str());
+        return;
+    }
+    //get argument
+    Arg arg= {0};
+    pos = str.find(",");
+    if(pos == std::string::npos || pos + 1 > str.size())
+        return;
+
+    section = trim(str.substr(0, pos));
+    str = str.substr(pos + 1);
+
+    if(!argtype || section.size() <= 0)
+        k->arg = arg;
+    else{
+        if(argtype == 1){ // integer
+            int n;
+            if(section[0] == '~')
+                n = ~std::stoi(section.substr(1));
+            else if(section[0] == '<')
+                n = 1<<std::stoi(section.substr(1));
+            else if(section[0] == '0' && section[1] == 'x')
+                n = std::stoi(section, nullptr, 16);
+            else
+                n = std::stoi(section);
+            arg.i = n;
+        }
+        else if(argtype == 2){ // unsigned int
+            unsigned int n;
+            if(section[0] == '~')
+                n = ~std::stoul(section.substr(1));
+            else if(section[0] == '<')
+                n = 1<<std::stoul(section.substr(1));
+            else if(section[0] == '0' && section[1] == 'x')
+                n = std::stoul(section, nullptr, 16);
+            else
+                n = std::stoul(section);
+            arg.ui = n;
+        }
+        else if(argtype == 3){ // float
+            arg.f = std::stof(section);
+        }
+        else if(argtype == 4){ // char **
+            char ** cargarr = splitstring(section);
+            int i = 0;
+            while( cargarr[i] ){
+                echo("%s\n",cargarr[i]);
+                i++;
+            }
+            echo("\n");
+            arg.v = cargarr;
+        }
+        else{
+            echo("Not implemted Argtype\n");
+            return;
+        }
+
+        k->arg = arg;
+    }
+    // mode section (grabbed | repeate | release)
+    section = trim(str)+ " ";
+    while((pos =section.find_first_of(" \t")) != std::string::npos){
+        str = section.substr(0, pos);
+        if(str == "Grabbed"){
+            k->grabRepRelMask |= 1;
+        }
+        else if(str == "Repeat"){
+            k->grabRepRelMask |= 1<<1;
+        }
+        else if(str == "Release"){
+            k->grabRepRelMask |= 1<<2;
+        }
+        pos = section.find_first_not_of(" \t", pos);
+        section = section.erase(0, pos);
+    }
+    keys->push_back(*k);
 }
 void
 parse_keybinds(){
@@ -234,12 +310,12 @@ parse_keybinds(){
         line = trim(line);
         if(updateDefinitions(&defines, line))
             continue;
-        line = applyDefinitions(defines, line);
         if(line.substr(0, 3) == "key"){
             line = ltrim(line.substr(3));
             if(line[0] == '='){
                 line = line.substr(1);
-                // parse_key(line, )
+                // echo("%s\n -> %s\n", line.c_str(), applyDefinitions(defines, line).c_str()); 
+                parse_key(applyDefinitions(defines, line), &_keys);
             }
             continue;
         }
@@ -252,6 +328,9 @@ parse_keybinds(){
 }
 void
 cleanup(){
+    
+}
+void dumpconfig(){
     
 }
 } // End of namespace config

@@ -98,9 +98,9 @@ static Key keys[] = {
 	{ MODKEY,               		Grabbed|Repeat,				XK_l,      setmfact,       {.f = +0.05} },
 	//{ MODKEY,             		Grabbed|Repeat,		  		XK_Return, zoom,           {0} },
 	{ MODKEY,               		Grabbed|Repeat,				XK_Tab,    view,           {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_t,      setlayout,      {.v = &layouts[0]} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,               		Grabbed|Repeat,				XK_t,      setlayout,      {0} },
+	{ MODKEY,               		Grabbed|Repeat,				XK_f,      setlayout,      {1} },
+	{ MODKEY,               		Grabbed|Repeat,				XK_m,      setlayout,      {2} },
 	//{ MODKEY,             		Grabbed|Repeat,		  		XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_space,  togglefloating, {0} },
 	{ MODKEY,               		Grabbed|Repeat,				XK_0,      view,           {.ui = ~0U } },
@@ -137,8 +137,8 @@ using config::ClkTagBar;
 using config::ClkClientWin;
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
-	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
-	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+	{ ClkLtSymbol,          0,              Button1,        setlayout,      {-1} },
+	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.i = 2} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
 	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },

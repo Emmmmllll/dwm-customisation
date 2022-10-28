@@ -50,3 +50,12 @@ struct Monitor {
 	Window barwin;
 	const Layout *lt[2];
 };
+
+typedef struct Winbar{
+	int x, y;
+	unsigned int w, h;
+	unsigned int bthw;
+	Client * c;
+	bool isVisible;
+	Window win;
+};
