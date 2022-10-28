@@ -45,40 +45,40 @@ static const Layout layouts[] = {
 };
 
 /* key definitions */
-#define MODKEY Mod1Mask
-#define SUPERKEY Mod4Mask
-#define XF86_AudioLowerVolume 0x1008ff11
-#define XF86_AudioMute 0x1008ff12
-#define XF86_AudioRaiseVolume 0x1008ff13
-#define XF86_AudioPlay 0x1008ff14
-#define XF86_AudioStop 0x1008ff15
-#define XF86_AudioPrev 0x1008ff16
-#define XF86_AudioNext 0x1008ff17
+// #define MODKEY Mod1Mask
+// #define SUPERKEY Mod4Mask
+// #define XF86_AudioLowerVolume 0x1008ff11
+// #define XF86_AudioMute 0x1008ff12
+// #define XF86_AudioRaiseVolume 0x1008ff13
+// #define XF86_AudioPlay 0x1008ff14
+// #define XF86_AudioStop 0x1008ff15
+// #define XF86_AudioPrev 0x1008ff16
+// #define XF86_AudioNext 0x1008ff17
 
-#define Grabbed 1
-#define Repeat 1 << 1
-#define Release 1 << 2
+// #define Grabbed 1
+// #define Repeat 1 << 1
+// #define Release 1 << 2
 
-#define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       Grabbed,		KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           Grabbed,		KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             Grabbed,		KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, Grabbed,		KEY,      toggletag,      {.ui = 1 << TAG} }
+// #define TAGKEYS(KEY,TAG) \
+// 	{ MODKEY,                       Grabbed,		KEY,      view,           {.ui = 1 << TAG} }, \
+// 	{ MODKEY|ControlMask,           Grabbed,		KEY,      toggleview,     {.ui = 1 << TAG} }, \
+// 	{ MODKEY|ShiftMask,             Grabbed,		KEY,      tag,            {.ui = 1 << TAG} }, \
+// 	{ MODKEY|ControlMask|ShiftMask, Grabbed,		KEY,      toggletag,      {.ui = 1 << TAG} }
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
-#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+// #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
 // static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 //static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *roficmd[] = { "rofi", "-show", "drun", NULL }; /* rofi */
-static const char *termcmd[]  = { "alacritty", NULL }; /* terminal */
-static const char *audioPlayPause[] = { "playerctl", "play-pause", NULL }; /* playPause */
-static const char *audioNext[] = { "playerctl", "next", NULL };
-static const char *audioPrev[] = { "playerctl", "previous", NULL };
-static const char *audioMuteToggle[] = {"pactl", "set-sink-mute", "@DEFAULT_SINK", "toggle", NULL};
-static const char *lowerVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "-5%", NULL};
-static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "+5%", NULL};
+// static const char *roficmd[] = { "rofi", "-show", "drun", NULL }; /* rofi */
+// static const char *termcmd[]  = { "alacritty", NULL }; /* terminal */
+// static const char *audioPlayPause[] = { "playerctl", "play-pause", NULL }; /* playPause */
+// static const char *audioNext[] = { "playerctl", "next", NULL };
+// static const char *audioPrev[] = { "playerctl", "previous", NULL };
+// static const char *audioMuteToggle[] = {"pactl", "set-sink-mute", "@DEFAULT_SINK", "toggle", NULL};
+// static const char *lowerVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "-5%", NULL};
+// static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "+5%", NULL};
 
 
 // using config::Key;
@@ -129,24 +129,24 @@ static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK",
 // };
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
-using config::Button;
-using config::ClkLtSymbol;
-using config::ClkWinTitle;
-using config::ClkStatusText;
-using config::ClkTagBar;
-using config::ClkClientWin;
-static Button buttons[] = {
-	/* click                event mask      button          function        argument */
-	{ ClkLtSymbol,          0,              Button1,        setlayout,      {-1} },
-	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.i = 2} },
-	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
-	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
-	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
-	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
-	{ ClkTagBar,            0,              Button1,        view,           {0} },
-	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
-	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
-	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
-};
+// using config::Button;
+// using config::ClkLtSymbol;
+// using config::ClkWinTitle;
+// using config::ClkStatusText;
+// using config::ClkTagBar;
+// using config::ClkClientWin;
+// static Button buttons[] = {
+// 	/* click                event mask      button          function        argument */
+// 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {-1} },
+// 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.i = 2} },
+// 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
+// 	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+// 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
+// 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
+// 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
+// 	{ ClkTagBar,            0,              Button1,        view,           {0} },
+// 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
+// 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
+// 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+// };
 

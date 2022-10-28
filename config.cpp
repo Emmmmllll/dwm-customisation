@@ -39,9 +39,12 @@ typedef struct ActionFunction{
 
 static std::vector<ActionFunction> actionFunctions;
 std::vector<Key> keys;
+std::vector<Button> buttons;
 
 void dump_defines();
 void dump_keys();
+void dump_buttons();
+
 char **
 splitstring(std::string str){
     std::size_t pos = 0;
@@ -250,12 +253,6 @@ parse_key(std::string str, std::vector<Key> *keys){
         }
         else if(argtype == 4){ // char **
             char ** cargarr = splitstring(section);
-            // int i = 0;
-            // while( cargarr[i] ){
-            //     echo("%s\n",cargarr[i]);
-            //     i++;
-            // }
-            // echo("\n");
             arg.v = cargarr;
         }
         else{
@@ -265,18 +262,18 @@ parse_key(std::string str, std::vector<Key> *keys){
 
         k->arg = arg;
     }
-    // mode section (grabbed | repeate | release)
+    //get mode section (grabbed | repeate | release)
     section = trim(str)+ " ";
     while((pos =section.find_first_of(" \t")) != std::string::npos){
         str = section.substr(0, pos);
         if(str == "Grabbed"){
-            k->grabRepRelMask |= 1;
+            k->grabRepRelMask |= Grabbed;
         }
         else if(str == "Repeat"){
-            k->grabRepRelMask |= 1<<1;
+            k->grabRepRelMask |= Repeat;
         }
         else if(str == "Release"){
-            k->grabRepRelMask |= 1<<2;
+            k->grabRepRelMask |= Release;
         }
         pos = section.find_first_not_of(" \t", pos);
         section = section.erase(0, pos);
@@ -286,7 +283,131 @@ parse_key(std::string str, std::vector<Key> *keys){
 }
 void
 parse_button(std::string str, std::vector<Button> *buttons){
+    Button *bt = new Button();
+    std::size_t pos;
+    std::string section;
+    //get button section (Modifiers included)
+    pos = str.find(",");
+    if(pos == std::string::npos || pos + 1 > str.size())
+        return;
+    section = trim(str.substr(0, pos+1));
+    str = str.substr(pos + 1);
 
+    while((pos = section.find_first_of(" \t,")) != std::string::npos){
+        std::string substr = section.substr(0, pos);
+        if( substr ==  "Mod4Mask")
+            bt->mask |= Mod4Mask;
+        else if( substr == "Mod1Mask")
+            bt->mask |= Mod1Mask;
+        else if( substr == "ControlMask")
+            bt->mask |= ControlMask;
+        else if( substr == "ShiftMask")
+            bt->mask |= ShiftMask;
+        else{
+            if(bt->button)
+                return;
+            else if(substr == "Button1")
+                bt->button = Button1;
+            else if(substr == "Button2")// 2 should be right click
+                bt->button = Button3;
+            else if(substr == "Button3")// 3 should be middleclick
+                bt->button = Button2;
+            else if(substr == "Button4")
+                bt->button = Button4;
+            else if(substr == "Button5")
+                bt->button = Button5;
+        }
+        pos = section.find_first_not_of(" \t,", pos);
+        section.erase(0, pos);
+    }
+    //get target section
+    pos = str.find(",");
+    if(pos == std::string::npos || pos + 1 > str.size())
+        return;
+    section = trim(str.substr(0, pos));
+    str = str.substr(pos + 1);
+    if(section == "ClkTagBar")
+        bt->click = ClkTagBar;
+    else if(section == "ClkLtSymbol")
+        bt->click = ClkLtSymbol;
+    else if(section == "ClkStatusText")
+        bt->click = ClkStatusText;
+    else if(section == "ClkWinTitle")
+        bt->click = ClkWinTitle;
+    else if(section == "ClkClientWin")
+        bt->click = ClkClientWin;
+    else if(section == "ClkRootWin")
+        bt->click = ClkRootWin;
+    else if(section == "ClkLast")
+        bt->click = ClkLast;
+    else
+        return;
+    //get actionFunctions section
+    unsigned char argtype = 0; // 0: no arg, 1: int, 2: uint, 3: float, 4: void
+    pos = str.find(",");
+    if(pos == std::string::npos || pos + 1 > str.size())
+        return;
+    section = trim(str.substr(0, pos));
+    str = str.substr(pos + 1);
+
+    for(ActionFunction &func : actionFunctions){
+        if(!strcmp(section.c_str(),func.name)){
+            bt->func = func.func;
+            argtype = func.argtype;
+            break;
+        }
+    }
+    if(bt->func == nullptr){
+        echo("No matching actionfunction found for: '%s'\n", section.c_str());
+        return;
+    }
+    //get argument
+    Arg arg= {0};
+    section = trim(str);
+
+    if(!argtype || section.size() <= 0)
+        bt->arg = arg;
+    else{
+        if(argtype == 1){ // integer
+            int n;
+            if(section[0] == '~')
+                n = ~std::stoi(section.substr(1));
+            else if(section[0] == '<')
+                n = 1<<std::stoi(section.substr(1));
+            else if(section[0] == '0' && section[1] == 'x')
+                n = std::stoi(section, nullptr, 16);
+            else
+                n = std::stoi(section);
+            arg.i = n;
+        }
+        else if(argtype == 2){ // unsigned int
+            unsigned int n;
+            if(section[0] == '~')
+                n = ~std::stoul(section.substr(1));
+            else if(section[0] == '<')
+                n = 1<<std::stoul(section.substr(1));
+            else if(section[0] == '0' && section[1] == 'x')
+                n = std::stoul(section, nullptr, 16);
+            else
+                n = std::stoul(section);
+            arg.ui = n;
+        }
+        else if(argtype == 3){ // float
+            arg.f = std::stof(section);
+        }
+        else if(argtype == 4){ // char **
+            char ** cargarr = splitstring(section);
+            arg.v = cargarr;
+        }
+        else{
+            echo("Not implemted Argtype\n");
+            return;
+        }
+
+        bt->arg = arg;
+    }
+    buttons->push_back(*bt);
+    delete bt;
 }
 void
 parse_keybinds(){
@@ -344,11 +465,17 @@ parse_keybinds(){
     dump_keys();
     keys = _keys;
     _keys.clear();
+    //cleanup buttons
+    dump_buttons();
+    buttons = _buttons;
+    _buttons.clear();
 }
 void
 cleanup(){
     dump_keys();
     keys.clear();
+    dump_buttons();
+    buttons.clear();
 }
 void
 dump_keys(){
@@ -371,5 +498,27 @@ dump_keys(){
         delete[] cargarr;        
     }
     keys.clear();
+}
+void
+dump_buttons(){
+    bool deleteArgs(false);
+    for(Button &bt : buttons){
+        deleteArgs = false;
+        for(ActionFunction &func : actionFunctions)
+            if(bt.func == func.func && (func.name == "spawn"))
+                deleteArgs = true;
+        if(!deleteArgs)
+            break;
+        char ** cargarr = (char **)bt.arg.v;
+        int i = 0;
+        while (cargarr[i])
+        {
+            delete[] cargarr[i];
+            i++;
+        }
+        delete[] cargarr[i];
+        delete[] cargarr;        
+    }
+    buttons.clear();
 }
 } // End of namespace config

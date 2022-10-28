@@ -2,6 +2,7 @@ namespace config{
 	
 	enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
+	enum {Grabbed = 1, Repeat = 1<<1, Release = 1<<2};
 
 	typedef struct {
 		unsigned int mod;
@@ -18,9 +19,13 @@ namespace config{
 		Arg arg;
 	} Button;
 
+#ifdef _GLIBCXX_VECTOR
 	extern std::vector<Key> keys;
-	// Button * buttons;
+	extern std::vector<Button> buttons;
 	// Layout * layouts;
+
+#endif // _GLIBCXX_VECTOR
+
 	// Rule * rules;
 	// char ** tags;
 

@@ -280,10 +280,10 @@ buttonpress(XEvent *e)
 		click = config::ClkClientWin;
 		
 	}
-	for (i = 0; i < LENGTH(buttons); i++)
-		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
-		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func(click == config::ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+	for (config::Button &button: config::buttons)
+		if (click == button.click && button.func && button.button == ev->button
+		&& CLEANMASK(button.mask) == CLEANMASK(ev->state))
+			button.func(click == config::ClkTagBar && button.arg.i == 0 ? &arg : &button.arg);
 }
 
 void
@@ -827,11 +827,11 @@ grabbuttons(Client *c, int focused)
 		if (!focused)
 			XGrabButton(dpy, AnyButton, AnyModifier, c->win, False,
 				BUTTONMASK, GrabModeSync, GrabModeSync, None, None);
-		for (i = 0; i < LENGTH(buttons); i++)
-			if (buttons[i].click == config::ClkClientWin)
+		for (config::Button &button: config::buttons)
+			if (button.click == config::ClkClientWin)
 				for (j = 0; j < LENGTH(modifiers); j++)
-					XGrabButton(dpy, buttons[i].button,
-						buttons[i].mask | modifiers[j],
+					XGrabButton(dpy, button.button,
+						button.mask | modifiers[j],
 						c->win, False, BUTTONMASK,
 						GrabModeAsync, GrabModeSync, None, None);
 	}
@@ -848,7 +848,7 @@ grabkeys(void)
 
 		XUngrabKey(dpy, AnyKey, AnyModifier, root);
 		for (config::Key &key : config::keys)
-			if(key.grabRepRelMask & Grabbed){
+			if(key.grabRepRelMask & config::Grabbed){
 				if ((code = XKeysymToKeycode(dpy, key.keysym)))
 					for (j = 0; j < LENGTH(modifiers); j++)
 						XGrabKey(dpy, code, key.mod | modifiers[j], root,
@@ -893,8 +893,8 @@ keypress(XEvent *e)
 		if (keysym == key.keysym
 		&& CLEANMASK(key.mod) == CLEANMASK(ev->state)
 		&& key.func
-		&& !(key.grabRepRelMask & Release)
-		&& (!isRepeat || key.grabRepRelMask & Repeat))
+		&& !(key.grabRepRelMask & config::Release)
+		&& (!isRepeat || key.grabRepRelMask & config::Repeat))
 			key.func(&(key.arg));
 	(*keysDown)[keycode/8] |= 1<<keycode%8;	
 }
@@ -927,8 +927,8 @@ keyrelease(XEvent *e)
 		if (keysym == key.keysym
 		&& CLEANMASK(key.mod) == CLEANMASK(ev->state)
 		&& key.func
-		&& key.grabRepRelMask & Release
-		&& (!isRepeat || key.grabRepRelMask & Repeat))
+		&& key.grabRepRelMask & config::Release
+		&& (!isRepeat || key.grabRepRelMask & config::Repeat))
 			key.func(&(key.arg));
 }
 
@@ -1220,9 +1220,13 @@ recttomon(int x, int y, int w, int h)
 }
 void
 reloadconfig(Arg *arg){
-	XUngrabKey(dpy, AnyKey, AnyModifier, root);
 	config::parse_keybinds();
 	grabkeys();
+	Client * c = NULL;
+	if(!selmon || !selmon->sel)
+		grabbuttons(c, 0);
+	else
+		grabbuttons(selmon->sel, 1);
 }
 void registeractionfunctions(){
 	config::register_actionfunc(focusmon, "focusmon", 1);
@@ -1586,7 +1590,6 @@ setup(void)
 	XChangeWindowAttributes(dpy, root, CWEventMask|CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
 	registeractionfunctions();
-	config::parse_keybinds();
 	config::parse_keybinds();
 	grabkeys();
 	focus(NULL);
