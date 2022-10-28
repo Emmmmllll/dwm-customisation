@@ -21,7 +21,7 @@ ${OBJ}: config.mk
 
 configFile:
 	cp -f config.def.h ./bin/config.h
-#    cp -f defkeybinds.conf home/emil/.config/dwm/keybinds.conf
+	cp -f defkeybinds.conf /home/emil/.config/dwm/keybinds.conf
 
 ./bin:
 	mkdir -p ./bin/

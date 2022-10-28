@@ -81,52 +81,52 @@ static const char *lowerVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK",
 static const char *raiseVolume[] = {"pactl", "set-sink-volume", "@DEFAULT_SINK", "+5%", NULL};
 
 
-using config::Key;
-static Key keys[] = {
-	/* modifier     	   			grabRepRel_Mask				key        function        argument */
-	{ 0,	          				Grabbed|Repeat,				XF86_AudioNext, spawn,     { .v = audioNext }},
-	{ 0,	          				Grabbed|Repeat,				XF86_AudioPrev, spawn,     { .v = audioPrev }},
-	{ 0,	          				Grabbed|Repeat,				XF86_AudioLowerVolume, spawn, {.v = lowerVolume }},
-	{ 0,	          				Grabbed|Repeat,				XF86_AudioRaiseVolume, spawn, {.v = raiseVolume }},
-	{ 0,	          				Grabbed|Repeat,				XF86_AudioMute, spawn,     {.v = audioMuteToggle }},
-	{ MODKEY,               		Grabbed|Repeat,				XK_b,      togglebar,      {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_l,      setmfact,       {.f = +0.05} },
-	//{ MODKEY,             		Grabbed|Repeat,		  		XK_Return, zoom,           {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_Tab,    view,           {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_t,      setlayout,      {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_f,      setlayout,      {1} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_m,      setlayout,      {2} },
-	//{ MODKEY,             		Grabbed|Repeat,		  		XK_space,  setlayout,      {0} },
-	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_space,  togglefloating, {0} },
-	{ MODKEY,               		Grabbed|Repeat,				XK_0,      view,           {.ui = ~0U } },
-	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_0,      tag,            {.ui = ~0U } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_comma,  focusmon,       {.i = -1 } },
-	{ MODKEY,               		Grabbed|Repeat,				XK_period, focusmon,       {.i = +1 } },
-	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_comma,  tagmon,         {.i = -1 } },
-	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_period, tagmon,         {.i = +1 } },
-	TAGKEYS(                      								XK_1,                      0),
-	TAGKEYS(                      								XK_2,                      1),
-	TAGKEYS(                      								XK_3,                      2),
-	TAGKEYS(                      								XK_4,                      3),
-	TAGKEYS(                      								XK_5,                      4),
-	TAGKEYS(                      								XK_6,                      5),
-	TAGKEYS(                      								XK_7,                      6),
-	TAGKEYS(                      								XK_8,                      7),
-	TAGKEYS(                      								XK_9,                      8),
-	// on released
-	{ MODKEY|ShiftMask,				Grabbed|Release,            XK_e,      quit,           {0} },
-	// no repeate
-	{ 0,	          		        Grabbed,					XF86_AudioPlay, spawn,     {.v = audioPlayPause }},
-	{ MODKEY|ShiftMask,             Grabbed,					XK_q,      killclient,     {0} },
-	{ SUPERKEY,                     Grabbed,					XK_space,  spawn,          {.v = roficmd } },
-	{ SUPERKEY,	                	Grabbed,					XK_Return, spawn,          {.v = termcmd } },
-	{ ControlMask|MODKEY,			Grabbed,					XK_r, refreshconfig,       {0} }
-};
+// using config::Key;
+// static Key keys[] = {
+// 	/* modifier     	   			grabRepRel_Mask				key        function        argument */
+// 	{ 0,	          				Grabbed|Repeat,				XF86_AudioNext, spawn,     { .v = audioNext }},
+// 	{ 0,	          				Grabbed|Repeat,				XF86_AudioPrev, spawn,     { .v = audioPrev }},
+// 	{ 0,	          				Grabbed|Repeat,				XF86_AudioLowerVolume, spawn, {.v = lowerVolume }},
+// 	{ 0,	          				Grabbed|Repeat,				XF86_AudioRaiseVolume, spawn, {.v = raiseVolume }},
+// 	{ 0,	          				Grabbed|Repeat,				XF86_AudioMute, spawn,     {.v = audioMuteToggle }},
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_b,      togglebar,      {0} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_j,      focusstack,     {.i = +1 } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_k,      focusstack,     {.i = -1 } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_i,      incnmaster,     {.i = +1 } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_d,      incnmaster,     {.i = -1 } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_h,      setmfact,       {.f = -0.05} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_l,      setmfact,       {.f = +0.05} },
+// 	//{ MODKEY,             		Grabbed|Repeat,		  		XK_Return, zoom,           {0} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_Tab,    view,           {0} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_t,      setlayout,      {0} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_f,      setlayout,      {1} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_m,      setlayout,      {2} },
+// 	//{ MODKEY,             		Grabbed|Repeat,		  		XK_space,  setlayout,      {0} },
+// 	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_space,  togglefloating, {0} },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_0,      view,           {.ui = ~0U } },
+// 	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_0,      tag,            {.ui = ~0U } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_comma,  focusmon,       {.i = -1 } },
+// 	{ MODKEY,               		Grabbed|Repeat,				XK_period, focusmon,       {.i = +1 } },
+// 	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_comma,  tagmon,         {.i = -1 } },
+// 	{ MODKEY|ShiftMask,     		Grabbed|Repeat,				XK_period, tagmon,         {.i = +1 } },
+// 	TAGKEYS(                      								XK_1,                      0),
+// 	TAGKEYS(                      								XK_2,                      1),
+// 	TAGKEYS(                      								XK_3,                      2),
+// 	TAGKEYS(                      								XK_4,                      3),
+// 	TAGKEYS(                      								XK_5,                      4),
+// 	TAGKEYS(                      								XK_6,                      5),
+// 	TAGKEYS(                      								XK_7,                      6),
+// 	TAGKEYS(                      								XK_8,                      7),
+// 	TAGKEYS(                      								XK_9,                      8),
+// 	// on released
+// 	{ MODKEY|ShiftMask,				Grabbed|Release,            XK_e,      quit,           {0} },
+// 	// no repeate
+// 	{ 0,	          		        Grabbed,					XF86_AudioPlay, spawn,     {.v = audioPlayPause }},
+// 	{ MODKEY|ShiftMask,             Grabbed,					XK_q,      killclient,     {0} },
+// 	{ SUPERKEY,                     Grabbed,					XK_space,  spawn,          {.v = roficmd } },
+// 	{ SUPERKEY,	                	Grabbed,					XK_Return, spawn,          {.v = termcmd } },
+// 	{ ControlMask|MODKEY,			Grabbed,					XK_r, refreshconfig,       {0} }
+// };
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 using config::Button;

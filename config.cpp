@@ -38,8 +38,10 @@ typedef struct ActionFunction{
 };
 
 static std::vector<ActionFunction> actionFunctions;
+std::vector<Key> keys;
 
-void dumpconfig();
+void dump_defines();
+void dump_keys();
 char **
 splitstring(std::string str){
     std::size_t pos = 0;
@@ -248,12 +250,12 @@ parse_key(std::string str, std::vector<Key> *keys){
         }
         else if(argtype == 4){ // char **
             char ** cargarr = splitstring(section);
-            int i = 0;
-            while( cargarr[i] ){
-                echo("%s\n",cargarr[i]);
-                i++;
-            }
-            echo("\n");
+            // int i = 0;
+            // while( cargarr[i] ){
+            //     echo("%s\n",cargarr[i]);
+            //     i++;
+            // }
+            // echo("\n");
             arg.v = cargarr;
         }
         else{
@@ -280,6 +282,11 @@ parse_key(std::string str, std::vector<Key> *keys){
         section = section.erase(0, pos);
     }
     keys->push_back(*k);
+    delete k;
+}
+void
+parse_button(std::string str, std::vector<Button> *buttons){
+
 }
 void
 parse_keybinds(){
@@ -319,18 +326,50 @@ parse_keybinds(){
             }
             continue;
         }
-    
-    
-    
-    
-    }    
+        else if(line.substr(0,6) =="button"){
+            line = ltrim(line.substr(6));
+            if(line[0] == '='){
+                line = line.substr(1);
+                parse_button(applyDefinitions(defines, line), &_buttons);
+            }
+        }
+    }
     conf_file.close();
+    //cleanup defines
+    for(std::string* &define : defines){
+        delete[] define;
+    }
+    defines.clear();
+    //cleanup keys
+    dump_keys();
+    keys = _keys;
+    _keys.clear();
 }
 void
 cleanup(){
-    
+    dump_keys();
+    keys.clear();
 }
-void dumpconfig(){
-    
+void
+dump_keys(){
+    bool deleteArgs(false);
+    for(Key &key : keys){
+        deleteArgs = false;
+        for(ActionFunction &func : actionFunctions)
+            if(key.func == func.func && (func.name == "spawn"))
+                deleteArgs = true;
+        if(!deleteArgs)
+            break;
+        char ** cargarr = (char **)key.arg.v;
+        int i = 0;
+        while (cargarr[i])
+        {
+            delete[] cargarr[i];
+            i++;
+        }
+        delete[] cargarr[i];
+        delete[] cargarr;        
+    }
+    keys.clear();
 }
 } // End of namespace config

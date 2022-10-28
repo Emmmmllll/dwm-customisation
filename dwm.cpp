@@ -44,6 +44,8 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 
+#include <vector>
+
 #include "drw.h"
 #include "util.h"
 
@@ -468,7 +470,7 @@ createmon(void)
 {
 	Monitor *m;
 
-	m = (Monitor*)calloc(1, sizeof(Monitor));
+	m = new Monitor();
 	m->tagset[0] = m->tagset[1] = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
@@ -845,11 +847,11 @@ grabkeys(void)
 		KeyCode code;
 
 		XUngrabKey(dpy, AnyKey, AnyModifier, root);
-		for (i = 0; i < LENGTH(keys); i++)
-			if(keys[i].grabRepRelMask & Grabbed){
-				if ((code = XKeysymToKeycode(dpy, keys[i].keysym)))
+		for (config::Key &key : config::keys)
+			if(key.grabRepRelMask & Grabbed){
+				if ((code = XKeysymToKeycode(dpy, key.keysym)))
 					for (j = 0; j < LENGTH(modifiers); j++)
-						XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
+						XGrabKey(dpy, code, key.mod | modifiers[j], root,
 							True, GrabModeAsync, GrabModeAsync);
 			}
 	}
@@ -887,13 +889,13 @@ keypress(XEvent *e)
 	unsigned int keycode = ev->keycode;
 	unsigned  char isRepeat = ((*keysDown)[keycode/8] & 1<<keycode%8);
 
-	for (i = 0; i < LENGTH(keys); i++)
-		if (keysym == keys[i].keysym
-		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
-		&& keys[i].func
-		&& !(keys[i].grabRepRelMask & Release)
-		&& (!isRepeat || keys[i].grabRepRelMask & Repeat))
-			keys[i].func(&(keys[i].arg));
+	for (config::Key &key : config::keys)
+		if (keysym == key.keysym
+		&& CLEANMASK(key.mod) == CLEANMASK(ev->state)
+		&& key.func
+		&& !(key.grabRepRelMask & Release)
+		&& (!isRepeat || key.grabRepRelMask & Repeat))
+			key.func(&(key.arg));
 	(*keysDown)[keycode/8] |= 1<<keycode%8;	
 }
 void
@@ -921,13 +923,13 @@ keyrelease(XEvent *e)
 	// writeBitsToFile(32, keysDown, "~/xlog.txt");
 	
 	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
-	for (i = 0; i < LENGTH(keys); i++)
-		if (keysym == keys[i].keysym
-		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
-		&& keys[i].func
-		&& keys[i].grabRepRelMask & Release
-		&& (!isRepeat || keys[i].grabRepRelMask & Repeat))
-			keys[i].func(&(keys[i].arg));
+	for (config::Key &key : config::keys)
+		if (keysym == key.keysym
+		&& CLEANMASK(key.mod) == CLEANMASK(ev->state)
+		&& key.func
+		&& key.grabRepRelMask & Release
+		&& (!isRepeat || key.grabRepRelMask & Repeat))
+			key.func(&(key.arg));
 }
 
 void
@@ -953,7 +955,7 @@ manage(Window w, XWindowAttributes *wa)
 	Window trans = None;
 	XWindowChanges wc;
 
-	c = (Client *)calloc(1, sizeof(Client));
+	c = new Client();
 	c->win = w;
 	/* geometry */
 	c->x = c->oldx = wa->x;
@@ -1217,8 +1219,10 @@ recttomon(int x, int y, int w, int h)
 	return r;
 }
 void
-refreshconfig(Arg *arg){
+reloadconfig(Arg *arg){
+	XUngrabKey(dpy, AnyKey, AnyModifier, root);
 	config::parse_keybinds();
+	grabkeys();
 }
 void registeractionfunctions(){
 	config::register_actionfunc(focusmon, "focusmon", 1);
@@ -1227,7 +1231,7 @@ void registeractionfunctions(){
 	config::register_actionfunc(killclient, "killclient", 0);
 	config::register_actionfunc(movemouse, "movemouse", 0);
 	config::register_actionfunc(quit, "quit", 0);
-	config::register_actionfunc(refreshconfig, "reloadconfig", 0);
+	config::register_actionfunc(reloadconfig, "reloadconfig", 0);
 	config::register_actionfunc(resizemouse, "resizemouse", 0);
 	config::register_actionfunc(setlayout, "setlayout", 1);
 	config::register_actionfunc(setmfact, "setmfact", 3);
@@ -1582,6 +1586,7 @@ setup(void)
 	XChangeWindowAttributes(dpy, root, CWEventMask|CWCursor, &wa);
 	XSelectInput(dpy, root, wa.event_mask);
 	registeractionfunctions();
+	config::parse_keybinds();
 	config::parse_keybinds();
 	grabkeys();
 	focus(NULL);

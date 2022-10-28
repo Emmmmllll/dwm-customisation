@@ -18,7 +18,7 @@ namespace config{
 		Arg arg;
 	} Button;
 
-	// Key * keys;
+	extern std::vector<Key> keys;
 	// Button * buttons;
 	// Layout * layouts;
 	// Rule * rules;
