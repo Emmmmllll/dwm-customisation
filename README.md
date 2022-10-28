@@ -1,1 +1,1 @@
-# dwm-customisation
+# A customized version of dwm
