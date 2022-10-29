@@ -15,7 +15,7 @@ die(const char *fmt, ...)
 
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
-	fprintf(f, fmt, ap);
+	vfprintf(f, fmt, ap);
 	va_end(ap);
 
 	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {

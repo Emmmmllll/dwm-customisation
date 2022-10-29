@@ -1223,9 +1223,7 @@ reloadconfig(Arg *arg){
 	config::parse_keybinds();
 	grabkeys();
 	Client * c = NULL;
-	if(!selmon || !selmon->sel)
-		grabbuttons(c, 0);
-	else
+	if(selmon && selmon->sel)
 		grabbuttons(selmon->sel, 1);
 }
 void registeractionfunctions(){
@@ -1591,6 +1589,7 @@ setup(void)
 	XSelectInput(dpy, root, wa.event_mask);
 	registeractionfunctions();
 	config::parse_keybinds();
+	reloadconfig({0});
 	grabkeys();
 	focus(NULL);
 }
@@ -2147,13 +2146,46 @@ runAutostart(void){
 int
 main(int argc, char *argv[])
 {
-	if (argc == 2 && !strcmp("-v", argv[1]))
-		die("dwm-" VERSION);
-	else if(argc == 2 && !strcmp("-dbg", argv[1])){
-		isDebug = true;
+	int shmid = -1;
+	{
+		// my Makefile extension doesn't let me specify Arguments for debug running... need to find a better workaround than this...
+		bool debuggerIsAnnoying = false;
+		if(strcmp(">|<",argv[0])){
+			debuggerIsAnnoying = true;
+			argc = 4;
+			argv = new char *[4]{"path/to/this/executable", "-dbg", "-shmid", "229429"};
+		}
+		//argcheck
+		int first = 1;
+		bool validArgs = false;
+		if (argc == 2 && !strcmp("-v", argv[first]))
+			die("dwm-" VERSION);
+		if(argc > first && !strcmp("-dbg", argv[first])){
+			first ++;
+			isDebug = true;
+			validArgs = true;
+		}
+		if(argc > first+1 && !strcmp("-shmid", argv[first])){ // shared memory id
+			int i = 0;
+			shmid = 0;
+			char c;
+			while((c = argv[first+1][i++])){
+				if(c < '0' || c > '9')
+					die("shmid is not numeric");
+				shmid *= 10;
+				shmid += c - '0';
+			}
+			first += 2;
+			validArgs = true;
+		}
+		if (argc != 1 && !validArgs)
+			die("usage: dwm [-v] %d", argc);
+
+		//still annoying
+		if(debuggerIsAnnoying)
+			delete[] argv;
 	}
-	else if (argc != 1)
-		die("usage: dwm [-v]");
+
 	if (!setlocale(LC_CTYPE, "") || !XSupportsLocale())
 		fputs("warning: no locale support\n", stderr);
 	if (!(dpy = XOpenDisplay(NULL)))

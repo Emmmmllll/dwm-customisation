@@ -37,4 +37,5 @@ LDFLAGS  = ${LIBS}
 #LDFLAGS = ${LIBS}
 
 # compiler and linker
-COMPILER = g++
+CPPCOMPILER = g++
+CCOMPILER = gcc
